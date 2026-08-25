@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基于 WiFi CSI 的人体呼吸频率检测系统 · 毕业设计导航</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --ink: #1a2233;
+    --muted: #5b6472;
+    --accent: #0f766e;
+    --accent-dark: #0b5d57;
+    --accent-soft: #e6f4f2;
+    --line: #e5e8ee;
+    --amber: #b45309;
+    --amber-soft: #fdf3e3;
+    --red: #b91c1c;
+    --red-soft: #fdeaea;
+    --green: #15803d;
+    --green-soft: #e8f5ec;
+    --blue: #1d4ed8;
+    --blue-soft: #e8effd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header {
+    background: linear-gradient(135deg, #0f766e 0%, #134e4a 60%, #123b38 100%);
+    color: #fff;
+    padding: 56px 24px 48px;
+    text-align: center;
+  }
+  header .tag {
+    display: inline-block;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-bottom: 18px;
+  }
+  header h1 { font-size: 30px; font-weight: 700; margin-bottom: 12px; }
+  header p.sub { font-size: 15px; color: #d6e8e6; max-width: 720px; margin: 0 auto; }
+
+  nav {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .inner {
+    max-width: 1080px; margin: 0 auto;
+    display: flex; gap: 4px; flex-wrap: wrap;
+    padding: 10px 20px;
+  }
+  nav a {
+    color: var(--muted); font-size: 13.5px;
+    padding: 6px 12px; border-radius: 8px;
+    white-space: nowrap;
+  }
+  nav a:hover { background: var(--accent-soft); color: var(--accent-dark); text-decoration: none; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  section { margin-bottom: 40px; }
+  section > h2 {
+    font-size: 22px; font-weight: 700;
+    padding-left: 14px; border-left: 4px solid var(--accent);
+    margin-bottom: 20px;
+  }
+  h3 { font-size: 17px; font-weight: 700; margin: 22px 0 10px; }
+  p { margin: 10px 0; color: var(--ink); }
+  .muted { color: var(--muted); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 14px 0;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+  .callout {
+    border-radius: 12px; padding: 16px 18px; margin: 14px 0;
+    border: 1px solid var(--line);
+  }
+  .callout.warn { background: var(--amber-soft); border-color: #f1d9a8; }
+  .callout.ok { background: var(--green-soft); border-color: #bfe3c9; }
+  .callout.info { background: var(--blue-soft); border-color: #c5d6f5; }
+  .callout .ct { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  th, td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f7; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfd; }
+
+  ol.steps, ul.plain { padding-left: 22px; margin: 10px 0; }
+  ol.steps li, ul.plain li { margin: 8px 0; }
+  ol.steps li::marker { color: var(--accent); font-weight: 700; }
+
+  .badge {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 2px 9px; border-radius: 6px; margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge.en { background: var(--accent-soft); color: var(--accent-dark); }
+  .badge.cn { background: #f3e8ff; color: #6b21a8; }
+  .badge.data { background: var(--amber-soft); color: var(--amber); }
+  .badge.core { background: var(--red-soft); color: var(--red); }
+
+  .link-list { list-style: none; padding: 0; }
+  .link-list li {
+    padding: 12px 0; border-bottom: 1px dashed var(--line);
+  }
+  .link-list li:last-child { border-bottom: none; }
+  .link-list .t { font-weight: 600; color: var(--ink); }
+  .link-list .d { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+  .link-list .src { font-size: 12.5px; color: var(--accent); word-break: break-all; }
+
+  .pill {
+    display: inline-block; background: var(--accent-soft); color: var(--accent-dark);
+    border-radius: 999px; padding: 2px 12px; font-size: 12.5px; font-weight: 600;
+    margin: 2px 4px 2px 0;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 20px 40px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    header h1 { font-size: 23px; }
+    nav .inner { gap: 2px; }
+    nav a { font-size: 12.5px; padding: 5px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="tag">本科毕业设计 · 低成本方案 · 2026</span>
+  <h1>基于 WiFi CSI 的人体呼吸频率检测系统</h1>
+  <p class="sub">无线信道状态信息（Channel State Information）无接触式呼吸监测 —— 原理、技术路线、论文与开源代码一站式导航</p>
+</header>
+
+<nav>
+  <div class="inner">
+    <a href="#what">是什么</a>
+    <a href="#applications">能做什么</a>
+    <a href="#roadmap">技术路线</a>
+    <a href="#hardware">硬件方案</a>
+    <a href="#pipeline">算法流程</a>
+    <a href="#experiment">实验设计</a>
+    <a href="#benchmark">性能参考</a>
+    <a href="#papers">论文链接</a>
+    <a href="#code">代码 &amp; 数据集</a>
+    <a href="#landing">落地建议</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ============ 是什么 ============ -->
+  <section id="what">
+    <h2>① WiFi-CSI 是什么</h2>
+    <div class="card">
+      <p><strong>CSI（Channel State Information，信道状态信息）</strong> 描述无线信号从发射端到接收端时，在<strong>每个子载波上的幅度和相位</strong>变化。它比传统只给一个平均功率值的 <strong>RSSI</strong> 精细得多 —— 802.11n 的 20 MHz 信道通常拆分成几十到上百个子载波，每个子载波都是一个复数（幅度 + 相位）。</p>
+      <p><strong>核心原理：</strong>人体呼吸会引起胸腔 / 腹腔 <strong>几毫米级的周期性起伏</strong>，这会改变 WiFi 多径传播路径，从而在 CSI 上留下周期性的微弱波动。人的呼吸频率约为 <strong>0.1 ~ 0.5 Hz（6 ~ 30 次/分钟）</strong>，对 CSI 时间序列做频域分析，峰值频率就是呼吸频率。</p>
+      <div class="callout ok">
+        <span class="ct">为什么值得做</span>
+        无需穿戴设备 · 不侵犯隐私（不像摄像头）· 利用现有 WiFi 设备 · 成本极低 · 研究方向成熟、资料充分，非常适合本科毕业设计。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 能做什么 ============ -->
+  <section id="applications">
+    <h2>② 它能做什么（应用范围）</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>类别</th><th>典型应用</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>生命体征监测</strong> <span class="badge core">本课题</span></td><td>呼吸率、心率、睡眠监测、呼吸暂停（睡眠呼吸障碍）预筛查</td></tr>
+          <tr><td>人体活动识别</td><td>走路 / 跑步 / 跌倒检测、手势识别、按键识别</td></tr>
+          <tr><td>室内定位与感知</td><td>人员存在检测、人数统计、步态分析、身份识别</td></tr>
+          <tr><td>其他</td><td>情绪识别、目标成像、姿态估计</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">对毕业设计而言，<strong>呼吸频率检测</strong>是其中<strong>入门最友好、数据最易获取、评价指标最明确</strong>的子方向。</p>
+    </div>
+  </section>
+
+  <!-- ============ 技术路线 ============ -->
+  <section id="roadmap">
+    <h2>③ 技术路线（做完的完整路径）</h2>
+    <div class="card">
+      <ol class="steps">
+        <li><strong>数据采集</strong> —— 用 ESP32 / Intel 5300 提取 CSI 子载波幅度与相位时间序列</li>
+        <li><strong>相位校准</strong> —— 消除载波频率偏移（CFO）与采样频率偏移（SFO）带来的相位失真（常用共轭相乘 / CSI 比值模型）</li>
+        <li><strong>去异常值</strong> —— Hampel 滤波（中位数 + MAD，抗噪强）</li>
+        <li><strong>滤波</strong> —— 呼吸频带 0.1 ~ 0.5 Hz 带通滤波（滤除高频噪声与低频身体运动伪影）</li>
+        <li><strong>子载波选择 / 降维</strong> —— 挑呼吸频带内信噪比最高的子载波，或用 <strong>PCA 主成分分析</strong>提取主成分</li>
+        <li><strong>信号分解（可选）</strong> —— VMD / EMD / 希尔伯特-黄变换（HHT），去除呼吸以外的模态，提升精度</li>
+        <li><strong>频率估计</strong> —— <strong>FFT</strong> 找峰值频率，或峰值检测 + 呼吸计数 + 卡尔曼滤波融合</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 硬件方案 ============ -->
+  <section id="hardware">
+    <h2>④ 硬件采集方案（二选一）</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3 style="margin-top:0;">经典科研路线 <span class="badge en">Intel 5300</span></h3>
+        <table>
+          <tbody>
+            <tr><td><strong>硬件</strong></td><td>Intel 5300 网卡 + Linux CSI Tool（Ubuntu，两台笔记本）</td></tr>
+            <tr><td><strong>成本</strong></td><td>二手卡约 ¥100</td></tr>
+            <tr><td><strong>特点</strong></td><td>数据最标准、文献最多，中文论文几乎都基于它</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">低成本路线（推荐） <span class="badge en">ESP32</span></h3>
+        <table>
+          <tbody>
+            <tr><td><strong>硬件</strong></td><td>ESP32-S3 开发板 2~4 块（约 ¥54）</td></tr>
+            <tr><td><strong>成本</strong></td><td>极低（¥50 ~ 200）</td></tr>
+            <tr><td><strong>特点</strong></td><td>56 个子载波、~20Hz 采集，近年论文新趋势</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="ct">⚠ 关键决策</span>
+      若学校实验室能借到 <strong>Intel 5300 网卡 + Linux 环境</strong>，中文论文复现资料最多；没有的话，<strong>ESP32 路线照样能出成果</strong>，且有现成开源固件把 CSI 通过 UDP 发给电脑处理。
+    </div>
+  </section>
+
+  <!-- ============ 算法流程 ============ -->
+  <section id="pipeline">
+    <h2>⑤ 算法流程（毕业设计的核心工作量）</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>#</th><th>步骤</th><th>常用方法</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>数据采集</td><td>得到子载波幅度 / 相位时间序列</td></tr>
+          <tr><td>2</td><td>相位校准</td><td>共轭相乘（SpotFi 核心步骤）、CSI 比值模型</td></tr>
+          <tr><td>3</td><td>去异常值</td><td>Hampel 滤波（中位数 + MAD）</td></tr>
+          <tr><td>4</td><td>滤波</td><td>0.1 ~ 0.5 Hz 带通滤波</td></tr>
+          <tr><td>5</td><td>子载波选择</td><td>按呼吸信噪比（BNR）选最优子载波，或 PCA 降维</td></tr>
+          <tr><td>6</td><td>信号分解（可选）</td><td>VMD / EMD / HHT</td></tr>
+          <tr><td>7</td><td>频率估计</td><td>FFT 峰值检测；峰值检测 + 呼吸计数 + 卡尔曼滤波</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">最经典的 <strong>「PCA + FFT」基线</strong>工作量适中、好复现；想做出亮点可再加 VMD 或机器学习。</p>
+    </div>
+  </section>
+
+  <!-- ============ 实验设计 ============ -->
+  <section id="experiment">
+    <h2>⑥ 实验设计（答辩最有说服力的部分）</h2>
+    <div class="card">
+      <ul class="plain">
+        <li>不同呼吸频率下的检测精度</li>
+        <li>人体不同朝向（面对 / 侧对 / 背对收发设备）</li>
+        <li>不同距离（1m / 3m / 5m / 7m…）</li>
+        <li>非视距（隔墙）场景</li>
+        <li>有无身体动作干扰</li>
+        <li>（进阶）双人呼吸分离</li>
+      </ul>
+      <p><strong>参考真值（Ground Truth）：</strong>用呼吸传感器（如 HKH-11C，几十元）同步记录实际呼吸，计算 <strong>MAE / 均方误差 / 准确率</strong>。</p>
+    </div>
+  </section>
+
+  <!-- ============ 性能参考 ============ -->
+  <section id="benchmark">
+    <h2>⑦ 性能参考（写「研究现状」和预期指标用）</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>系统 / 算法</th><th>来源</th><th>性能指标</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>VitalCSI</td><td>牛津大学</td><td>r² = 0.93，MAE = 1.20 brpm，覆盖 6~33 brpm（消费级 AP + 树莓派）</td></tr>
+          <tr><td>FinerSense</td><td>西北工业大学</td><td>呼吸率 / 深度 / 吸呼比精度分别 &gt;97% / &gt;95% / &gt;91%</td></tr>
+          <tr><td>VMD-HHT 算法</td><td>电子与信息学报 2025</td><td>平均精度 &gt;97%，5m 处 MAE &lt;0.5 bpm</td></tr>
+          <tr><td>低成本 ESP32 路线</td><td>Appl. Sci. 2024</td><td>整体 MAD ≈ 2.60 bpm（正常呼吸可到 1.38 bpm）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 论文链接 ============ -->
+  <section id="papers">
+    <h2>⑧ 论文链接</h2>
+
+    <h3>入门综述（建议先精读 1 篇） <span class="badge en">英文</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">WiFi Sensing with Channel State Information: A Survey <span class="badge core">领域必读</span></div>
+          <div class="d">ACM Computing Surveys, 2019 —— 领域最权威综述，讲清 CSI 数学模型与整个技术栈</div>
+          <div class="src">https://dlnext.acm.org/doi/fullHtml/10.1145/3310194</div>
+        </li>
+        <li>
+          <div class="t">A survey on vital signs monitoring based on Wi-Fi CSI data</div>
+          <div class="d">Computer Communications, 2022 —— 专门讲呼吸 + 心率</div>
+          <div class="src">https://www.sciencedirect.com/science/article/pii/S0140366422003127</div>
+        </li>
+        <li>
+          <div class="t">Wireless sensing applications with Wi-Fi CSI, preprocessing techniques, and detection algorithms: A survey</div>
+          <div class="d">Computer Communications, 2024 —— 按「采集→预处理→检测算法→应用」四阶段组织</div>
+          <div class="src">https://www.sciencedirect.com/science/article/abs/pii/S0140366424002214</div>
+        </li>
+        <li>
+          <div class="t">AI-enhanced CSI-based Wi-Fi sensing for non-contact vital sign monitoring</div>
+          <div class="d">PeerJ Computer Science —— AI 模型呼吸 / 心率 &gt;95% 准确率</div>
+          <div class="src">https://eprints.leedsbeckett.ac.uk/id/eprint/12731/</div>
+        </li>
+      </ul>
+    </div>
+
+    <h3>经典系统（写研究现状引用） <span class="badge en">英文</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">VitalCSI: Contactless Respiratory Rate Estimation Using Consumer-Grade Wi-Fi CSI</div>
+          <div class="d">牛津大学 —— 消费级 WiFi + 树莓派</div>
+          <div class="src">https://ora.ox.ac.uk/objects/uuid:4935e9bb-33d0-41e8-af97-eebb63e247b0</div>
+        </li>
+        <li>
+          <div class="t">FinerSense: A Fine-Grained Respiration Sensing System Based on Precise Separation of Wi-Fi Signals</div>
+          <div class="d">西北工业大学</div>
+          <div class="src">https://pure.nwpu.edu.cn/en/publications/finersense-a-fine-grained-respiration-sensing-system-based-on-pre-2/</div>
+        </li>
+        <li>
+          <div class="t">ComplexBeat: Breathing Rate Estimation from Complex CSI</div>
+          <div class="d">arXiv 2025 —— 较新，用复数 CSI 做呼吸率估计</div>
+          <div class="src">https://ar5iv.labs.arxiv.org/html/2502.12657</div>
+        </li>
+        <li>
+          <div class="t">Commodity Wi-Fi-Based Wireless Sensing Advancements over the Past Five Years</div>
+          <div class="d">Sensors, 2024 —— 近五年商品化 WiFi 感知进展</div>
+          <div class="src">https://www.mdpi.com/1424-8220/24/22/7195</div>
+        </li>
+      </ul>
+    </div>
+
+    <h3>中文文献（答辩 / 开题更贴合，可直接搜知网） <span class="badge cn">中文</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">杨小龙等《面向通感一体化的变分模态分解-希尔伯特-黄变换呼吸频率感知算法》</div>
+          <div class="d">电子与信息学报, 2025</div>
+          <div class="src">https://jeit.ac.cn//cn/article/pdf/preview/10.11999/JEIT240640.pdf</div>
+        </li>
+        <li>
+          <div class="t">刘言等《基于 WiFi-CSI 多载波幅相融合的呼吸监测算法》</div>
+          <div class="d">桂林电子科技大学学报</div>
+          <div class="src">https://xb.guet.edu.cn/article/doi/10.16725/j.1673-808X.202420</div>
+        </li>
+        <li>
+          <div class="t">张宸《基于 WiFi 信号的呼吸监测关键技术研究》<span class="badge core">论文结构模板</span></div>
+          <div class="d">北京邮电大学硕士论文, 2025</div>
+          <div class="src">http://cnkimirror.clcn.net.cn/KCMS/detail/detail.aspx?filename=1025075668.nh&amp;dbcode=CMFD&amp;dbname=CMFD2026</div>
+        </li>
+        <li>
+          <div class="t">韩小飞《基于无线信号的非侵入式人体信息感知技术研究》<span class="badge core">入门模板</span></div>
+          <div class="d">浙江工业大学硕士论文, 2020</div>
+          <div class="src">https://mall.cnki.net/magazine/article/CDMD/1020734644.htm</div>
+        </li>
+        <li>
+          <div class="t">专利 CN106725488A：无线场强呼吸检测仪</div>
+          <div class="d">含 FFT / Hampel 滤波 / 滑动平均滤波的具体实现描述</div>
+          <div class="src">https://patentimages.storage.googleapis.com/16/8e/09/2758c99ab809db/CN106725488A.pdf</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 代码 & 数据集 ============ -->
+  <section id="code">
+    <h2>⑨ 开源代码 &amp; 数据集</h2>
+
+    <h3>Intel 5300 路线 <span class="badge en">Linux CSI Tool</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">dhalperi/linux-80211n-csitool <span class="badge core">官方主仓库</span></div>
+          <div class="d">Intel 5300 网卡 CSI 提取工具（修改版内核 / iwlwifi 驱动）</div>
+          <div class="src">https://github.com/dhalperi/linux-80211n-csitool</div>
+        </li>
+        <li>
+          <div class="t">dhalperi/linux-80211n-csitool-supplementary</div>
+          <div class="d">配套固件与用户态日志工具（log_to_file）</div>
+          <div class="src">https://github.com/dhalperi/linux-80211n-csitool-supplementary</div>
+        </li>
+        <li>
+          <div class="t">spanev/linux-80211n-csitool</div>
+          <div class="d">较新内核 fork（已测 Ubuntu 16.04 / 18.04，kernel 4.15）</div>
+          <div class="src">https://github.com/spanev/linux-80211n-csitool</div>
+        </li>
+      </ul>
+    </div>
+
+    <h3>ESP32 路线 <span class="badge en">低成本</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">espressif/esp-csi <span class="badge core">官方框架</span></div>
+          <div class="d">乐鑫官方 CSI 框架，含 get-started（csi_recv / csi_send / csi_recv_router）与 esp-radar 应用</div>
+          <div class="src">https://github.com/espressif/esp-csi</div>
+        </li>
+        <li>
+          <div class="t">ruvnet/RuView —— ESP32-S3 CSI Node Firmware</div>
+          <div class="d">隐私优先的感知节点固件：呼吸 0.1~0.5 Hz 带通 + 过零 BPM，CSI 走 UDP ~20Hz</div>
+          <div class="src">https://github.com/ruvnet/RuView</div>
+        </li>
+        <li>
+          <div class="t">James-Rhodes/esp-csi</div>
+          <div class="d">基于 CSI 的应用（室内定位、人体检测等）</div>
+          <div class="src">https://github.com/James-Rhodes/esp-csi</div>
+        </li>
+      </ul>
+    </div>
+
+    <h3>呼吸检测实现代码 <span class="badge en">可直接参考</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">hku-aiot-courses/lab_wifi_sensing <span class="badge core">推荐上手</span></div>
+          <div class="d">香港大学 AIoT 实验：CSI 采集、可视化、基于 DSP 的呼吸率估计与基线流水线</div>
+          <div class="src">https://github.com/hku-aiot-courses/lab_wifi_sensing</div>
+        </li>
+        <li>
+          <div class="t">Oriseven/CIRSense</div>
+          <div class="d">CIRSense 官方实现，处理 802.11ax CIR 数据做呼吸监测</div>
+          <div class="src">https://github.com/Oriseven/CIRSense</div>
+        </li>
+        <li>
+          <div class="t">AlbanyArmenta0711/WiFi-CSI-MiningTool</div>
+          <div class="d">MATLAB 脚本 + App，呼吸 / 心率监测，K-NN 分类 + 实时监测模式</div>
+          <div class="src">https://github.com/AlbanyArmenta0711/WiFi-CSI-MiningTool</div>
+        </li>
+        <li>
+          <div class="t">AlbanyArmenta0711/Embedded_WiFi_Sensing</div>
+          <div class="d">ESP32 CSI Web 采集工具 + HAR / 呼吸数据集 + 深度学习模型（Keras / TFLite）</div>
+          <div class="src">https://github.com/AlbanyArmenta0711/Embedded_WiFi_Sensing</div>
+        </li>
+      </ul>
+    </div>
+
+    <h3>公开数据集 <span class="badge data">数据集</span></h3>
+    <div class="card">
+      <ul class="link-list">
+        <li>
+          <div class="t">CIRSense Dataset <span class="badge core">含真值</span></div>
+          <div class="d">IEEE DataPort，真实 802.11ax CSI 测量，含 breathe / distance / multitarget / nlos_breathe，真值用 NeuLog 呼吸带记录</div>
+          <div class="src">https://ieee-dataport.org/documents/cirsense-dataset-real-world-80211ax-csi-measurements-wireless-sensing</div>
+        </li>
+        <li>
+          <div class="t">HKU AIoT Lab WiFi Sensing Dataset</div>
+          <div class="d">香港大学课程数据集（OneDrive），含 CSI 与 PLUX 呼吸带真值</div>
+          <div class="src">https://1drv.ms/u/s!Ajq1o16ob8nOpAdw7fcq_YnsyJPM?e=k47DJb</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 落地建议 ============ -->
+  <section id="landing">
+    <h2>⑩ 落地建议（给大四低成本）</h2>
+    <div class="card">
+      <h3 style="margin-top:0;">结论：能实现，且能做成「可演示、可答辩」的完整系统</h3>
+      <table>
+        <thead>
+          <tr><th>落地层次</th><th>可行性</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>A. 毕业设计 Demo</strong></td><td>✅ 完全可行</td><td>一块 ESP32 + 显示器 / 网页实时显示呼吸波形和频率，答辩演示效果很好</td></tr>
+          <tr><td><strong>B. 校园场景小应用</strong></td><td>⚠️ 半可行</td><td>单人静止场景 OK；多人、多动场景精度会下降</td></tr>
+          <tr><td><strong>C. 商用医疗级产品</strong></td><td>❌ 基本不可行</td><td>精度 / 鲁棒性达不到医疗器械标准，全球几乎没有成功的纯 WiFi 呼吸监测商品</td></tr>
+        </tbody>
+      </table>
+      <div class="callout info">
+        <span class="ct">建议定位</span>
+        把「落地」定位在 <strong>A 层（可演示 Demo）+ 少量 B 层展望</strong>，这已是满分水平。不要抱着「做出能卖的产品」的预期，否则会耗费大量时间在商用级鲁棒性上。
+      </div>
+      <p class="muted"><strong>时间节奏（2~4 个月）：</strong>环境搭建 1~2 周 → 跑通基线 1~2 周 → 自己采集调参 2~3 周 → 实验 + 写论文 4~6 周。</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>基于 WiFi CSI 的人体呼吸频率检测系统 · 毕业设计导航页</p>
+  <p>文献与开源链接均来自公开网络检索，标注仓库与论文均为真实存在；建议在正式引用前自行核对原文。</p>
+</footer>
+
+</body>
+</html>
