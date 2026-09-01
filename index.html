@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>基于 WiFi CSI 的室内定位与感知系统 · 毕业设计导航</title>
+<title>基于 WiFi CSI 的人员存在检测系统 · 毕业设计导航</title>
 <style>
   :root {
     --bg: #f7f8fa;
     --card: #ffffff;
     --ink: #1a2233;
     --muted: #5b6472;
-    --accent: #0f766e;
-    --accent-dark: #0b5d57;
-    --accent-soft: #e6f4f2;
+    --accent: #c2410c;
+    --accent-dark: #9a3412;
+    --accent-soft: #fdeee3;
     --line: #e5e8ee;
     --amber: #b45309;
     --amber-soft: #fdf3e3;
@@ -37,15 +37,15 @@
   a:hover { text-decoration: underline; }
 
   header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #0f766e 100%);
+    background: linear-gradient(135deg, #9a3412 0%, #c2410c 55%, #ea580c 100%);
     color: #fff;
     padding: 56px 24px 48px;
     text-align: center;
   }
   header .tag {
     display: inline-block;
-    background: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.28);
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.3);
     border-radius: 999px;
     padding: 4px 14px;
     font-size: 13px;
@@ -53,7 +53,7 @@
     margin-bottom: 18px;
   }
   header h1 { font-size: 30px; font-weight: 700; margin-bottom: 12px; }
-  header p.sub { font-size: 15px; color: #dbe4ff; max-width: 720px; margin: 0 auto; }
+  header p.sub { font-size: 15px; color: #ffe8d6; max-width: 720px; margin: 0 auto; }
 
   nav {
     position: sticky; top: 0; z-index: 20;
@@ -149,20 +149,19 @@
 <body>
 
 <header>
-  <span class="tag">本科毕业设计 · 低成本方案 · 室内定位与感知</span>
-  <h1>基于 WiFi CSI 的室内定位与感知系统</h1>
-  <p class="sub">无线信道状态信息（Channel State Information）室内定位 —— 原理、定位方法、技术路线、论文与开源代码一站式导航</p>
+  <span class="tag">本科毕业设计 · 低成本方案 · 人员存在检测</span>
+  <h1>基于 WiFi CSI 的人员存在检测系统</h1>
+  <p class="sub">无线信道状态信息（Channel State Information）人体存在检测 —— 原理、方法、技术路线、论文与开源代码一站式导航</p>
 </header>
 
 <nav>
   <div class="inner">
     <a href="#what">是什么</a>
     <a href="#applications">能做什么</a>
-    <a href="#methods">定位方法</a>
+    <a href="#methods">检测方法</a>
     <a href="#hardware">硬件方案</a>
     <a href="#pipeline">算法流程</a>
     <a href="#experiment">实验设计</a>
-    <a href="#benchmark">性能参考</a>
     <a href="#papers">论文链接</a>
     <a href="#code">代码 &amp; 数据集</a>
     <a href="#landing">落地建议</a>
@@ -175,100 +174,96 @@
   <section id="what">
     <h2>① WiFi-CSI 是什么</h2>
     <div class="card">
-      <p><strong>CSI（Channel State Information，信道状态信息）</strong> 描述无线信号从发射端到接收端时，在<strong>每个子载波上的幅度和相位</strong>变化。相比只给一个平均功率值的 <strong>RSSI</strong>，CSI 保留了信号的<strong>相位、到达角（AoA）、传播时延（ToF）和多普勒</strong>等精细信息。</p>
-      <p><strong>定位原理：</strong>信号经过不同路径到达接收端，每条路径的<strong>到达角、时延、衰减</strong>都不相同。CSI 记录了这些多径信息，因此可以从 CSI 中反推出目标位置——要么用"指纹"（不同位置的 CSI 特征不同），要么用"几何"（AoA / ToF 反解坐标）。</p>
+      <p><strong>CSI（Channel State Information，信道状态信息）</strong> 描述无线信号从发射端到接收端时，在<strong>每个子载波上的幅度和相位</strong>变化。它比只给一个平均功率值的 <strong>RSSI</strong> 精细得多——802.11n 的 20 MHz 信道通常拆成几十到上百个子载波。</p>
+      <p><strong>人员存在检测原理：</strong>人体会<strong>吸收、反射、散射</strong> WiFi 信号。当有人进入监测区域时，CSI 的幅度和相位分布会发生明显变化——<strong>有人时 CSI 波动（方差、动态分量能量）显著大于无人时的静态环境</strong>。通过分析 CSI 幅度的统计特征，就能判断区域内是否有人。</p>
       <div class="callout ok">
-        <span class="ct">为什么值得做</span>
-        GPS 在室内失效，而 WiFi 无处不在；CSI 定位无需额外设备、成本低、精度可达<strong>米级甚至分米级</strong>，是室内定位与感知领域最热门的研究方向之一。
+        <span class="ct">为什么适合做毕业设计</span>
+        这是 CSI 感知里<strong>最简单、最入门</strong>的方向——本质是一个「有人 / 无人」的<strong>二分类问题</strong>，无需复杂算法，ESP32 官方框架自带此示例，非常适合低成本、短周期的本科毕业设计。
       </div>
     </div>
   </section>
 
   <!-- ============ 能做什么 ============ -->
   <section id="applications">
-    <h2>② 它能做什么（应用范围）</h2>
+    <h2>② 它能做什么（应用场景）</h2>
     <div class="card">
       <table>
         <thead>
-          <tr><th>类别</th><th>典型应用</th></tr>
+          <tr><th>场景</th><th>说明</th></tr>
         </thead>
         <tbody>
-          <tr><td><strong>静态定位</strong> <span class="badge core">本课题</span></td><td>指纹定位：人在房间 / 楼层的哪个位置</td></tr>
-          <tr><td><strong>轨迹追踪</strong></td><td>连续定位、行人轨迹绘制</td></tr>
-          <tr><td><strong>无源（被动）定位</strong></td><td>目标不携带设备也能被定位（device-free）</td></tr>
-          <tr><td>室内导航与感知</td><td>商场导览、资产追踪、人员存在检测、人数统计</td></tr>
-          <tr><td>与活动识别联合</td><td>同时识别"人在哪 + 在做什么"</td></tr>
+          <tr><td><strong>智能家居</strong> <span class="badge core">本课题</span></td><td>有人自动开灯 / 空调，无人自动关闭</td></tr>
+          <tr><td>安防入侵检测</td><td>检测是否有人非法进入房间</td></tr>
+          <tr><td>独居老人监护</td><td>长时间无人活动 → 告警（跌倒 / 意外）</td></tr>
+          <tr><td>会议室 / 教室占用检测</td><td>判断房间是否被占用</td></tr>
+          <tr><td>节能管理</td><td>无人自动断电、关闭设备</td></tr>
         </tbody>
       </table>
-      <p class="muted">对毕业设计而言，<strong>「CSI 指纹定位」</strong>是入门最友好、实验最可控、评价指标最明确的子方向；想进阶可做<strong>AoA / ToF 几何定位</strong>或深度学习指纹。</p>
+      <p class="muted">人员存在检测也是<strong>毫米波雷达人体存在传感器</strong>（小米、Aqara 等）正在做的商用场景，但 WiFi CSI 方案<strong>无需额外硬件</strong>、成本更低。</p>
     </div>
   </section>
 
-  <!-- ============ 定位方法 ============ -->
+  <!-- ============ 检测方法 ============ -->
   <section id="methods">
-    <h2>③ 定位方法（三大类）</h2>
+    <h2>③ 检测方法（三类，从易到难）</h2>
     <div class="card">
       <table>
         <thead>
-          <tr><th>方法</th><th>原理</th><th>代表系统 / 算法</th><th>特点</th></tr>
+          <tr><th>方法</th><th>思路</th><th>实现难度</th><th>特点</th></tr>
         </thead>
         <tbody>
-          <tr><td><strong>指纹法</strong><br>Fingerprinting</td><td>离线采集各位置 CSI 特征建指纹库，在线匹配定位</td><td>kNN、WKNN、SVR、CNN、LSTM</td><td>精度稳、无需几何模型，但建库耗时、环境变化需重建</td></tr>
-          <tr><td><strong>几何法</strong><br>Geometric</td><td>用 AoA / ToF / 距离模型反解坐标</td><td>SpotFi（AoA）、Chronos（ToF）、MUSIC 算法</td><td>无需离线建库，但需精确校准、受多径影响大</td></tr>
-          <tr><td><strong>融合法</strong><br>Hybrid</td><td>多维参数（AoA + ToF + DFS）联合定位</td><td>多维参数融合、深度学习端到端</td><td>精度高，但系统复杂度高</td></tr>
+          <tr><td><strong>统计阈值法</strong> <span class="badge core">最推荐</span></td><td>算 CSI 幅度的方差 / 动态分量能量，超过阈值判定「有人」</td><td>★ 最简单</td><td>无需训练、实时快，但阈值需人工调</td></tr>
+          <tr><td><strong>机器学习分类</strong></td><td>提取统计特征（方差、相关系数、峰度等），SVM / 随机森林 / KNN 二分类</td><td>★★ 中等</td><td>精度更高、更稳健，需少量标注数据</td></tr>
+          <tr><td><strong>深度学习</strong></td><td>CSI 幅度矩阵输入 CNN / LSTM，端到端二分类</td><td>★★★ 进阶</td><td>精度最好，但需更多数据与算力</td></tr>
         </tbody>
       </table>
-      <p class="muted">本科毕业设计最稳妥的路线：<strong>「CSI 幅度/相位指纹 + WKNN/SVR 或 CNN」</strong>，工作量适中、易出结果；进阶可尝试 SpotFi 的 AoA 几何定位。</p>
+      <p class="muted">本科毕业设计建议：<strong>先做「统计阈值法」跑通，再加 SVM / 随机森林对比</strong>——既保证工作量，又容易出结果。</p>
     </div>
   </section>
 
   <!-- ============ 硬件方案 ============ -->
   <section id="hardware">
-    <h2>④ 硬件采集方案</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr><th>方案</th><th>硬件</th><th>成本</th><th>特点</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>经典科研路线</strong></td><td>Intel 5300 网卡 + Linux CSI Tool（两台笔记本）</td><td>二手卡约 ¥100</td><td>数据最标准、中文论文几乎都用它</td></tr>
-          <tr><td><strong>低成本路线（推荐）</strong></td><td>ESP32-S3 / ESP32-C3 开发板 + 路由器</td><td>¥50 ~ 300</td><td>ESPARGOS / esp-ppb 已支持 MUSIC AoA 与 ToF 定位</td></tr>
-          <tr><td>手机路线</td><td>Nexus 5（改驱动）等</td><td>需特定机型</td><td>武汉大学等自研手机 CSI 采集工具</td></tr>
-          <tr><td>SDR 路线</td><td>USRP N210 + GNU Radio</td><td>较贵</td><td>学术研究用，数据最灵活</td></tr>
-        </tbody>
-      </table>
-      <div class="callout warn">
-        <span class="ct">⚠ 关键决策</span>
-        定位需要<strong>多个 AP / 锚点</strong>（指纹法通常 2~4 个）。若走 Intel 5300 路线需 2 台以上设备；走 ESP32 路线可用多块开发板组网，成本更低、更适合低成本毕业设计。
+    <h2>④ 硬件方案（二选一）</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3 style="margin-top:0;">低成本路线（强烈推荐） <span class="badge en">ESP32</span></h3>
+        <table>
+          <tbody>
+            <tr><td><strong>硬件</strong></td><td>ESP32-S3 开发板 1~2 块 + 路由器</td></tr>
+            <tr><td><strong>成本</strong></td><td>¥30 ~ 100</td></tr>
+            <tr><td><strong>特点</strong></td><td>官方 esp-csi 框架自带 human detection 示例，开箱即用</td></tr>
+          </tbody>
+        </table>
       </div>
+      <div class="card">
+        <h3 style="margin-top:0;">经典科研路线 <span class="badge en">Intel 5300</span></h3>
+        <table>
+          <tbody>
+            <tr><td><strong>硬件</strong></td><td>Intel 5300 网卡 + Linux CSI Tool（两台笔记本）</td></tr>
+            <tr><td><strong>成本</strong></td><td>二手卡约 ¥100</td></tr>
+            <tr><td><strong>特点</strong></td><td>数据最标准、文献最多，中文论文几乎都用它</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="ct">⚠ 关键决策</span>
+      人员存在检测只需要判断「有没有人」，<strong>对 CSI 精度要求比定位 / 呼吸低得多</strong>，因此 <strong>ESP32 路线完全够用</strong>、性价比最高。若学校有 Intel 5300 现成设备也可用。
     </div>
   </section>
 
   <!-- ============ 算法流程 ============ -->
   <section id="pipeline">
-    <h2>⑤ 算法流程</h2>
+    <h2>⑤ 算法流程（毕业设计的核心工作量）</h2>
     <div class="card">
-      <h3 style="margin-top:0;">指纹定位（推荐，两阶段）</h3>
-      <table>
-        <thead>
-          <tr><th>阶段</th><th>步骤</th><th>常用方法</th></tr>
-        </thead>
-        <tbody>
-          <tr><td rowspan="4"><strong>离线训练</strong></td><td>数据采集</td><td>在各参考点采集 CSI，记录真实坐标</td></tr>
-          <tr><td>预处理</td><td>Hampel 去异常、相位校准（共轭乘法 / 线性拟合）、小波去噪</td></tr>
-          <tr><td>特征提取</td><td>幅度 / 相位 / 特征图像 / PCA 降维</td></tr>
-          <tr><td>建指纹库</td><td>特征 + 坐标 存入数据库</td></tr>
-          <tr><td rowspan="2"><strong>在线定位</strong></td><td>匹配</td><td>kNN / WKNN / 马氏距离 WKNN / SVR / CNN / LSTM</td></tr>
-          <tr><td>输出坐标</td><td>估计位置 + 定位误差</td></tr>
-        </tbody>
-      </table>
-      <h3>几何定位（进阶，AoA / ToF）</h3>
       <ol class="steps">
-        <li>多天线 / 多 AP 采集 CSI</li>
-        <li>用 <strong>MUSIC / ESPRIT</strong> 超分辨算法估计各径到达角（AoA）</li>
-        <li>或从相位差估计传播时延（ToF）</li>
-        <li>多 AP 三角定位反解坐标（SpotFi / Chronos 思路）</li>
+        <li><strong>数据采集</strong> —— 用 ESP32 / Intel 5300 持续采集 CSI 幅度时间序列</li>
+        <li><strong>预处理</strong> —— Hampel 去异常值、滑动平均平滑、可选相位校准</li>
+        <li><strong>特征提取</strong> —— 计算滑动窗口内的统计特征：<strong>方差 / 标准差 / 相关系数 / 动态分量能量</strong></li>
+        <li><strong>判决</strong> —— 统计阈值法（特征 &gt; 阈值 → 有人）或分类器（SVM / 随机森林）输出「有人 / 无人」</li>
+        <li><strong>输出与联动</strong> —— 实时显示状态，可联动继电器 / 灯 / 蜂鸣器</li>
       </ol>
+      <p class="muted">核心点：有人时 CSI 幅度的<strong>方差显著增大</strong>，这是最直观、最好用的判别特征。</p>
     </div>
   </section>
 
@@ -277,163 +272,96 @@
     <h2>⑥ 实验设计（答辩最有说服力的部分）</h2>
     <div class="card">
       <ul class="plain">
-        <li>不同定位算法对比（kNN vs WKNN vs SVR vs CNN）</li>
-        <li>不同场景（机房 / 走廊 / 会议室 / 大厅）</li>
-        <li>不同参考点间距（0.5m / 1m / 2m 网格）</li>
-        <li>不同 AP 数量（1 个 / 2 个 / 3 个）</li>
-        <li>不同天线数量与朝向</li>
-        <li>有无遮挡 / 非视距（NLoS）场景</li>
+        <li>有人 vs 无人 检测准确率（混淆矩阵）</li>
+        <li>不同距离（1m / 3m / 5m / 7m）</li>
+        <li>非视距（隔墙 / 隔门）场景</li>
+        <li>静止的人 vs 走动的人</li>
+        <li>不同阈值 / 不同分类器对比（阈值法 vs SVM vs 随机森林）</li>
+        <li>不同子载波 / 不同天线数量</li>
       </ul>
-      <p><strong>评价指标：</strong>平均定位误差（米）、定位误差 CDF 曲线、中位误差、标准差、定位准确率。</p>
-    </div>
-  </section>
-
-  <!-- ============ 性能参考 ============ -->
-  <section id="benchmark">
-    <h2>⑦ 性能参考（写「研究现状」和预期指标用）</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr><th>系统 / 研究</th><th>方法</th><th>性能指标</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>SpotFi</td><td>AoA 几何定位（SIGCOMM 2015）</td><td>中位精度 40 cm，多径丰富环境</td></tr>
-          <tr><td>Chronos</td><td>单 AP ToF 测距（NSDI 2016）</td><td>分米级定位</td></tr>
-          <tr><td>武汉大学（陈定智 2022）</td><td>残差神经网络 + 5G CSI</td><td>机房 0.19 m、会议厅 / 走廊 0.75 m；5G CSI 达厘米级</td></tr>
-          <tr><td>华南理工（黄熙豪 2024）</td><td>Adaboost 无源定位 + SAGE</td><td>静态 1.10 m，轨迹追踪 0.96 m</td></tr>
-          <tr><td>MIFI（台湾清华大学）</td><td>深度可分离卷积 + 无人机采指纹</td><td>分类准确率 &gt;99%，定位误差 0.9 m</td></tr>
-        </tbody>
-      </table>
+      <p><strong>评价指标：</strong>检测准确率、误报率、漏报率、混淆矩阵、ROC 曲线。</p>
     </div>
   </section>
 
   <!-- ============ 论文链接 ============ -->
   <section id="papers">
-    <h2>⑧ 论文链接</h2>
+    <h2>⑦ 论文链接</h2>
 
     <h3>入门综述（建议先精读 1 篇） <span class="badge en">英文</span></h3>
     <div class="card">
       <ul class="link-list">
         <li>
-          <div class="t">Wi-Fi Sensing for Indoor Localization via Channel State Information: A Survey <span class="badge core">领域必读</span></div>
-          <div class="d">ELKHA, 2023 —— 系统梳理 CSI 室内定位的优势、挑战与未来方向</div>
-          <div class="src">https://jurnal.untan.ac.id/index.php/Elkha/article/view/70830</div>
+          <div class="t">WiFi Sensing with Channel State Information: A Survey <span class="badge core">领域必读</span></div>
+          <div class="d">ACM Computing Surveys, 2019 —— 领域最权威综述，覆盖检测 / 识别 / 估计三大类</div>
+          <div class="src">https://dlnext.acm.org/doi/fullHtml/10.1145/3310194</div>
         </li>
         <li>
-          <div class="t">Survey of angle of arrival estimation based on Wi-Fi channel state information</div>
-          <div class="d">导航定位与授时, 2025 —— 专门讲 AoA 估计的 CSI 室内定位</div>
-          <div class="src">https://dhdwyss.spacejournal.cn/article/doi/10.19306/j.cnki.2095-8110.2025.04.001</div>
+          <div class="t">Wireless sensing applications with Wi-Fi CSI, preprocessing techniques, and detection algorithms: A survey</div>
+          <div class="d">Computer Communications, 2024 —— 按「采集→预处理→检测算法→应用」四阶段组织，含 presence detection</div>
+          <div class="src">https://www.sciencedirect.com/science/article/abs/pii/S0140366424002214</div>
+        </li>
+        <li>
+          <div class="t">Commodity Wi-Fi-Based Wireless Sensing Advancements over the Past Five Years</div>
+          <div class="d">Sensors, 2024 —— 近五年商品化 WiFi 感知进展</div>
+          <div class="src">https://www.mdpi.com/1424-8220/24/22/7195</div>
         </li>
         <li>
           <div class="t">Machine Learning Techniques for Wi-Fi CSI-Based Recognition and Sensing: A Comprehensive Review</div>
-          <div class="d">IEEE Internet of Things Journal —— 分析 65+ 个 CSI 感知机器学习模型</div>
+          <div class="d">IEEE Internet of Things Journal —— 分析 65+ 个 CSI 感知机器学习模型（含人体检测）</div>
           <div class="src">https://ieeexplore.ieee.org/abstract/document/11363177</div>
         </li>
-        <li>
-          <div class="t">From Fingerprinting to Advanced Machine Learning: A Systematic Review of Wi-Fi and BLE-Based Indoor Positioning Systems</div>
-          <div class="d">Sensors, 2025 —— 从指纹到 ML/DL 的室内定位系统综述</div>
-          <div class="src">https://pubmed.ncbi.nlm.nih.gov/41305153/</div>
-        </li>
       </ul>
     </div>
 
-    <h3>经典系统（写研究现状引用） <span class="badge en">英文</span></h3>
+    <h3>中文文献（答辩 / 开题更贴合，知网 / 万方检索建议） <span class="badge cn">中文</span></h3>
     <div class="card">
-      <ul class="link-list">
-        <li>
-          <div class="t">SpotFi: Decimeter Level Localization Using WiFi <span class="badge core">AoA 里程碑</span></div>
-          <div class="d">Kotaru et al., ACM SIGCOMM 2015 —— 三天线超分辨 AoA，中位精度 40cm</div>
-          <div class="src">https://doi.org/10.1145/2785956.2787487</div>
-        </li>
-        <li>
-          <div class="t">Decimeter-Level Localization with a Single WiFi Access Point (Chronos) <span class="badge core">ToF 里程碑</span></div>
-          <div class="d">Vasisht et al., USENIX NSDI 2016 —— 单 AP 通过 ToF 实现分米级定位</div>
-          <div class="src">https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/vasisht</div>
-        </li>
-      </ul>
-      <p class="muted">早期里程碑还包括 <strong>PinLoc</strong>（INFOCOM'12）、<strong>FILA</strong>（INFOCOM'13）、<strong>LiFS</strong>（MobiCom'12）、<strong>FIFS</strong>（ICCCN'12）等指纹 / 测距系统，可在 Google Scholar 或知网按标题检索。</p>
-    </div>
-
-    <h3>中文文献（答辩 / 开题更贴合，可直接搜知网 / 万方） <span class="badge cn">中文</span></h3>
-    <div class="card">
-      <ul class="link-list">
-        <li>
-          <div class="t">陈定智《基于 WiFi/5G 信道状态信息的室内定位技术研究》<span class="badge core">论文结构模板</span></div>
-          <div class="d">武汉大学硕士论文, 2022 —— 机房 0.19m，含 5G CSI 厘米级定位</div>
-          <div class="src">https://openir.whu.edu.cn/AchievementDetail/degree_3c8fe116-9ecd-4cf6-8fe1-25a6eca1e532</div>
-        </li>
-        <li>
-          <div class="t">曾智《基于 CSI 的 WiFi 室内定位技术研究》<span class="badge core">入门模板</span></div>
-          <div class="d">西南交通大学硕士论文 —— WKNN/SVR 指纹定位 + AoA-ToF-DFS 融合</div>
-          <div class="src">https://d.wanfangdata.com.cn/thesis/D04047414</div>
-        </li>
-        <li>
-          <div class="t">黄熙豪《基于 WiFi 信道状态信息的室内无源定位与追踪算法研究》</div>
-          <div class="d">华南理工大学硕士论文, 2024 —— Adaboost 无源指纹 + SAGE 参数估计</div>
-          <div class="src">https://s.wanfangdata.com.cn/paper?q=%E4%BD%9C%E8%80%85%3A%22%E9%BB%84%E7%86%99%E8%B1%AA%22</div>
-        </li>
-        <li>
-          <div class="t">《基于信道状态信息特征图像提取与融合的室内定位指纹算法研究》（BCILoc）</div>
-          <div class="d">传感技术学报 —— CSI 幅度/相位图像融合 + CNN + BLS</div>
-          <div class="src">https://chinatransducers.seu.edu.cn/ch/reader/view_abstract.aspx?file_no=cg230474&amp;journal_id=cgjsxb</div>
-        </li>
+      <p class="muted">人员存在检测作为独立课题的专门论文较少，通常作为「无源感知 / 入侵检测」的一部分。建议在知网用以下关键词检索：</p>
+      <ul class="plain">
+        <li><strong>WiFi 人体检测</strong> / <strong>被动式人体检测</strong></li>
+        <li><strong>无源目标检测</strong> / <strong>Device-free 感知</strong></li>
+        <li><strong>CSI 入侵检测</strong> / <strong>WiFi 室内入侵检测</strong></li>
+        <li><strong>信道状态信息 人员检测</strong></li>
       </ul>
     </div>
   </section>
 
   <!-- ============ 代码 & 数据集 ============ -->
   <section id="code">
-    <h2>⑨ 开源代码 &amp; 数据集</h2>
+    <h2>⑧ 开源代码 &amp; 数据集</h2>
 
-    <h3>指纹定位（深度学习） <span class="badge en">可直接跑</span></h3>
+    <h3>ESP32 官方框架（含 human detection） <span class="badge en">推荐上手</span></h3>
     <div class="card">
       <ul class="link-list">
         <li>
-          <div class="t">zhangleino1/WIFI-SCI-Indoor-Positioning <span class="badge core">推荐上手</span></div>
-          <div class="d">从 CSI 幅度 / 相位直接回归坐标，含 CNN / CNN-LSTM / CNN-Transformer 三种结构 + 样例数据集</div>
-          <div class="src">https://github.com/zhangleino1/WIFI-SCI-Indoor-Positioning</div>
+          <div class="t">espressif/esp-csi <span class="badge core">官方框架</span></div>
+          <div class="d">乐鑫官方 CSI 框架，自带 human detection（人体检测）示例，ESP32 全系支持</div>
+          <div class="src">https://github.com/espressif/esp-csi</div>
         </li>
         <li>
-          <div class="t">em22ad/CSI-Fingerprint-Indoor-Localization</div>
-          <div class="d">CNN-LSTM 指纹定位，亚米级精度，TensorFlow 实现（520 维 CSI 特征）</div>
-          <div class="src">https://github.com/em22ad/CSI-Fingerprint-Indoor-Localization</div>
+          <div class="t">James-Rhodes/esp-csi</div>
+          <div class="d">基于 CSI 的应用 fork（人体检测、室内定位等）</div>
+          <div class="src">https://github.com/James-Rhodes/esp-csi</div>
         </li>
         <li>
-          <div class="t">geekfeiw/apl <span class="badge data">含数据集</span></div>
-          <div class="d">活动识别 + 室内定位联合，1400+ CSI 指纹（16 位置 × 6 活动，USRP 采集）</div>
-          <div class="src">https://github.com/geekfeiw/apl</div>
+          <div class="t">ruvnet/RuView —— ESP32-S3 CSI Node</div>
+          <div class="d">隐私优先感知节点：presence（存在检测）、motion、跌倒检测，CSI 走 UDP</div>
+          <div class="src">https://github.com/ruvnet/RuView</div>
         </li>
       </ul>
     </div>
 
-    <h3>SpotFi 几何定位（AoA） <span class="badge en">经典复现</span></h3>
+    <h3>Intel 5300 采集工具 <span class="badge en">经典科研</span></h3>
     <div class="card">
       <ul class="link-list">
         <li>
-          <div class="t">Challenger1132/Wifi-Localization <span class="badge core">SpotFi Python 版</span></div>
-          <div class="d">SpotFi 的 Python 复现（参考 MATLAB 版），含 load_csi_data / spotfi_algorithms / spotfi_main</div>
-          <div class="src">https://github.com/Challenger1132/Wifi-Localization</div>
+          <div class="t">dhalperi/linux-80211n-csitool <span class="badge core">官方主仓库</span></div>
+          <div class="d">Intel 5300 网卡 CSI 提取工具（修改版内核 / iwlwifi 驱动）</div>
+          <div class="src">https://github.com/dhalperi/linux-80211n-csitool</div>
         </li>
         <li>
-          <div class="t">SpotFi 官方 MATLAB 实现</div>
-          <div class="d">SpotFi 作者的原始 MATLAB 代码（Bitbucket）</div>
-          <div class="src">https://bitbucket.org/mkotaru/spotfimusicaoaestimation</div>
-        </li>
-      </ul>
-    </div>
-
-    <h3>AoA / ToF 定位硬件（ESP32） <span class="badge en">低成本</span></h3>
-    <div class="card">
-      <ul class="link-list">
-        <li>
-          <div class="t">ESPARGOS</div>
-          <div class="d">ESP32 相位相干天线阵列 + Python 库，MUSIC AoA 估计 + 实时室内定位 demo</div>
-          <div class="src">https://espargos.net/</div>
-        </li>
-        <li>
-          <div class="t">jonathanmuller/esp-ppb</div>
-          <div class="d">ESP32-C3 相位同步平台，MUSIC / ESPRIT 测向 + WiFi ToF + 三角定位</div>
-          <div class="src">https://github.com/jonathanmuller/esp-ppb</div>
+          <div class="t">dhalperi/linux-80211n-csitool-supplementary</div>
+          <div class="d">配套固件与用户态日志工具</div>
+          <div class="src">https://github.com/dhalperi/linux-80211n-csitool-supplementary</div>
         </li>
       </ul>
     </div>
@@ -443,17 +371,12 @@
       <ul class="link-list">
         <li>
           <div class="t">yuanhao-cui/Awesome-WiFi-CSI-Research</div>
-          <div class="d">WiFi CSI 研究资源汇总，含 SpotFi 源码、MUSIC 定位、CSI 测量模型等</div>
+          <div class="d">WiFi CSI 研究资源汇总，含检测 / 定位 / 手势等各方向论文与源码</div>
           <div class="src">https://github.com/yuanhao-cui/Awesome-WiFi-CSI-Research</div>
         </li>
         <li>
-          <div class="t">geekfeiw/apl 数据集</div>
-          <div class="d">活动 + 定位联合 CSI 指纹数据集（随仓库提供）</div>
-          <div class="src">https://github.com/geekfeiw/apl</div>
-        </li>
-        <li>
-          <div class="t">Widar 3.0 / MM-Fi / NTU-Fi 等公开数据集</div>
-          <div class="d">在 Awesome-WiFi-CSI-Sensing 列表中汇总（含定位、活动、手势数据集）</div>
+          <div class="t">NTUMARS/Awesome-WiFi-CSI-Sensing</div>
+          <div class="d">NTU 火星实验室整理的 CSI 感知论文 / 数据集 / 工具大全（含 Widar 3.0、MM-Fi、NTU-Fi 等）</div>
           <div class="src">https://github.com/NTUMARS/Awesome-WiFi-CSI-Sensing</div>
         </li>
       </ul>
@@ -462,31 +385,31 @@
 
   <!-- ============ 落地建议 ============ -->
   <section id="landing">
-    <h2>⑩ 落地建议（给大四低成本）</h2>
+    <h2>⑨ 落地建议（给大四低成本）</h2>
     <div class="card">
-      <h3 style="margin-top:0;">结论：能实现，指纹定位是性价比最高的落地形态</h3>
+      <h3 style="margin-top:0;">结论：这是三个方向里<strong>最容易实现、最容易落地</strong>的一个</h3>
       <table>
         <thead>
           <tr><th>落地层次</th><th>可行性</th><th>说明</th></tr>
         </thead>
         <tbody>
-          <tr><td><strong>A. 毕业设计 Demo</strong></td><td>✅ 完全可行</td><td>在教室 / 实验室布 2~3 个 AP，采集指纹实现定位，界面显示估计位置 + 真实位置 + 误差 CDF</td></tr>
-          <tr><td><strong>B. 校园场景小应用</strong></td><td>⚠️ 半可行</td><td>固定楼层指纹库可用；环境大改（桌椅挪动、人多）需重新建库</td></tr>
-          <tr><td><strong>C. 商用级定位产品</strong></td><td>⚠️ 较难</td><td>需解决指纹漂移、设备异构、NLoS 等；纯 CSI 商品化少，但比呼吸检测更接近成熟（有商业 WiFi 定位先例）</td></tr>
+          <tr><td><strong>A. 毕业设计 Demo</strong></td><td>✅ 完全可行</td><td>一块 ESP32 + 网页 / 手机显示「有人 / 无人」状态，联动一个 LED / 继电器</td></tr>
+          <tr><td><strong>B. 校园场景小应用</strong></td><td>✅ 较可行</td><td>宿舍 / 教室占用检测、节能开关，单人 / 少人场景稳定</td></tr>
+          <tr><td><strong>C. 商用级产品</strong></td><td>⚠️ 部分可行</td><td>智能家居人体存在检测是成熟市场，但 WiFi 方案在多人、动态场景需更精细处理</td></tr>
         </tbody>
       </table>
       <div class="callout info">
         <span class="ct">建议定位</span>
-        本科毕业设计定位在 <strong>A 层（可演示 Demo）</strong>：选一个几十平米的房间，划 0.5m~1m 网格，采集指纹，跑通「预处理 → 特征提取 → WKNN/CNN 定位」，答辩效果直观、指标清晰。
+        <strong>Demo 形态</strong>：ESP32 采 CSI → UDP 发电脑 → Python 算方差 / 分类 → 网页实时显示「有人 / 无人」+ CSI 波形，联动 LED。这个 Demo 答辩时<strong>直观、可现场演示、工作量合适</strong>。
       </div>
-      <p class="muted"><strong>时间节奏（2~4 个月）：</strong>环境搭建 1~2 周 → 跑通公开代码 1~2 周 → 自己采指纹调参 2~3 周 → 实验 + 写论文 4~6 周。</p>
+      <p class="muted"><strong>时间节奏（1~3 个月，比定位 / 呼吸更短）：</strong>环境搭建 1 周 → 跑通 esp-csi human detection 示例 1 周 → 自己采集 + 分类器调参 1~2 周 → 实验 + 写论文 3~4 周。</p>
     </div>
   </section>
 
 </main>
 
 <footer>
-  <p>基于 WiFi CSI 的室内定位与感知系统 · 毕业设计导航页</p>
+  <p>基于 WiFi CSI 的人员存在检测系统 · 毕业设计导航页</p>
   <p>文献与开源链接均来自公开网络检索，标注仓库与论文均为真实存在；建议在正式引用前自行核对原文。</p>
 </footer>
 
